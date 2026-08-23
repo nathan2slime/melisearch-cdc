@@ -1,0 +1,7 @@
+[workspace]
+members = [
+    "apps/migrations",
+    "apps/indexer",
+    "apps/service"
+]
+resolver = "2"
