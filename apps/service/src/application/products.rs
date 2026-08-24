@@ -12,10 +12,10 @@ pub struct CreateProductInput {
 
 #[derive(Clone, Debug, Eq, PartialEq)]
 pub struct UpdateProductInput {
-    pub name: String,
-    pub description: Option<String>,
-    pub price_cents: i32,
-    pub stock: i32,
+    pub name: Option<String>,
+    pub description: Option<Option<String>>,
+    pub price_cents: Option<i32>,
+    pub stock: Option<i32>,
 }
 
 #[derive(Debug, Eq, PartialEq)]
@@ -96,7 +96,7 @@ pub async fn update_product(
     id: i32,
     input: UpdateProductInput,
 ) -> Result<Product, ProductError> {
-    validate_product_fields(&input.name, input.price_cents, input.stock)?;
+    validate_update_product_fields(&input)?;
 
     repository
         .update(id, input)
@@ -121,6 +121,26 @@ fn validate_product_fields(name: &str, price_cents: i32, stock: i32) -> Result<(
     }
 
     if stock < 0 {
+        return Err(ProductError::InvalidStock);
+    }
+
+    Ok(())
+}
+
+fn validate_update_product_fields(input: &UpdateProductInput) -> Result<(), ProductError> {
+    if input
+        .name
+        .as_deref()
+        .is_some_and(|name| name.trim().is_empty())
+    {
+        return Err(ProductError::InvalidName);
+    }
+
+    if input.price_cents.is_some_and(|price_cents| price_cents < 0) {
+        return Err(ProductError::InvalidPrice);
+    }
+
+    if input.stock.is_some_and(|stock| stock < 0) {
         return Err(ProductError::InvalidStock);
     }
 
@@ -163,10 +183,10 @@ mod tests {
         ) -> Result<Product, ProductRepositoryError> {
             Ok(Product::new(
                 1,
-                input.name,
-                input.description,
-                input.price_cents,
-                input.stock,
+                input.name.unwrap_or_else(|| "Keyboard".to_owned()),
+                input.description.unwrap_or(Some("Mechanical".to_owned())),
+                input.price_cents.unwrap_or(100),
+                input.stock.unwrap_or(1),
             ))
         }
 
@@ -201,14 +221,60 @@ mod tests {
             &repository,
             1,
             UpdateProductInput {
-                name: "Keyboard".to_owned(),
+                name: None,
                 description: None,
-                price_cents: -1,
-                stock: 1,
+                price_cents: Some(-1),
+                stock: None,
             },
         )
         .await;
 
         assert_eq!(result, Err(ProductError::InvalidPrice));
+    }
+
+    #[tokio::test]
+    async fn update_product_accepts_partial_name_update() {
+        let repository = InMemoryProductRepository;
+
+        let product = update_product(
+            &repository,
+            1,
+            UpdateProductInput {
+                name: Some("Mouse".to_owned()),
+                description: None,
+                price_cents: None,
+                stock: None,
+            },
+        )
+        .await
+        .unwrap();
+
+        assert_eq!(product.name(), "Mouse");
+        assert_eq!(product.description(), Some("Mechanical"));
+        assert_eq!(product.price_cents(), 100);
+        assert_eq!(product.stock(), 1);
+    }
+
+    #[tokio::test]
+    async fn update_product_accepts_description_clear() {
+        let repository = InMemoryProductRepository;
+
+        let product = update_product(
+            &repository,
+            1,
+            UpdateProductInput {
+                name: None,
+                description: Some(None),
+                price_cents: None,
+                stock: None,
+            },
+        )
+        .await
+        .unwrap();
+
+        assert_eq!(product.name(), "Keyboard");
+        assert_eq!(product.description(), None);
+        assert_eq!(product.price_cents(), 100);
+        assert_eq!(product.stock(), 1);
     }
 }
