@@ -179,6 +179,7 @@ pub async fn search_products(
     query: web::Query<SearchProductsQuery>,
 ) -> Result<HttpResponse, ProductError> {
     let repository = product_repository(&db);
+    let query = query.into_inner();
     let products = product_use_cases::search_products(
         &repository,
         search_index.get_ref(),
