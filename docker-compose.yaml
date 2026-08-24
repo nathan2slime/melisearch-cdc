@@ -4,9 +4,9 @@ services:
       context: .
       dockerfile: apps/web/Dockerfile
       args:
-        REACT_APP_PUBLIC_API_URL: ${REACT_APP_PUBLIC_API_URL:-http://localhost:5400/api}
+        REACT_APP_PUBLIC_API_URL: ${REACT_APP_PUBLIC_API_URL}
     ports:
-      - "3000:80"
+      - "${WEB_PORT}:80"
     depends_on:
       - service
 
@@ -16,38 +16,110 @@ services:
       dockerfile: apps/service/Dockerfile
     env_file:
       - .env
+    environment:
+      DATABASE_URL: ${SERVICE_DATABASE_URL}
     ports:
-      - "5400:5400"
+      - "${SERVICE_PORT}:${PORT}"
     depends_on:
       postgres:
         condition: service_healthy
+
   kafka:
     image: apache/kafka:4.3.1
+    hostname: kafka
+
     ports:
-      - "9092:9092"
+      - "${KAFKA_EXTERNAL_PORT}:9092"
+
+    environment:
+      KAFKA_NODE_ID: ${KAFKA_NODE_ID}
+
+      KAFKA_PROCESS_ROLES: broker,controller
+
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:29093
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+
+      KAFKA_LISTENERS: CONTROLLER://:29093,INTERNAL://:19092,EXTERNAL://:9092
+
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://${KAFKA_DOCKER_BOOTSTRAP_SERVERS},EXTERNAL://${KAFKA_EXTERNAL_HOST}:${KAFKA_EXTERNAL_PORT}
+
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+
+      CLUSTER_ID: ${KAFKA_CLUSTER_ID}
 
   kafka-ui:
     image: provectuslabs/kafka-ui:latest
+
+    depends_on:
+      - kafka
+
     ports:
-      - "8282:8080"
+      - "${KAFKA_UI_PORT}:8080"
+
     environment:
-      DYNAMIC_CONFIG_ENABLED: "true"
-  
+      KAFKA_CLUSTERS_0_NAME: ${KAFKA_UI_CLUSTER_NAME}
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: ${KAFKA_DOCKER_BOOTSTRAP_SERVERS}
+
+  meilisearch:
+    image: getmeili/meilisearch:v1.53
+    ports:
+      - "${MEILISEARCH_PORT}:7700"
+    environment:
+      MEILI_ENV: ${MEILI_ENV}
+      MEILI_MASTER_KEY: ${MEILISEARCH_API_KEY}
+    volumes:
+      - meilisearch-data:/meili_data
+
+  connect:
+    image: quay.io/debezium/connect:3.6
+    depends_on:
+      - kafka
+      - postgres
+    ports:
+      - "${DEBEZIUM_CONNECT_PORT}:8083"
+    environment:
+      BOOTSTRAP_SERVERS: ${KAFKA_DOCKER_BOOTSTRAP_SERVERS}
+
+      GROUP_ID: ${DEBEZIUM_CONNECT_GROUP_ID}
+
+      CONFIG_STORAGE_TOPIC: ${DEBEZIUM_CONNECT_CONFIG_TOPIC}
+      OFFSET_STORAGE_TOPIC: ${DEBEZIUM_CONNECT_OFFSET_TOPIC}
+      STATUS_STORAGE_TOPIC: ${DEBEZIUM_CONNECT_STATUS_TOPIC}
+
+      CONNECT_CONFIG_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_OFFSET_STORAGE_REPLICATION_FACTOR: 1
+      CONNECT_STATUS_STORAGE_REPLICATION_FACTOR: 1
+
   postgres:
     image: postgres:16-alpine
     environment:
-      POSTGRES_DB: melisearch
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: melisearch
+      POSTGRES_DB: ${POSTGRES_DB}
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT}:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
+    command:
+      - postgres
+      - -c
+      - wal_level=logical
+      - -c
+      - max_replication_slots=10
+      - -c
+      - max_wal_senders=10
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres -d melisearch"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER} -d ${POSTGRES_DB}"]
       interval: 10s
       timeout: 5s
       retries: 5
 
 volumes:
   postgres-data:
+  meilisearch-data:

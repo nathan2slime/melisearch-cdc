@@ -42,6 +42,9 @@ jobs:
         with:
           components: clippy
 
+      - name: Install native dependencies
+        run: sudo apt-get update && sudo apt-get install -y libcurl4-openssl-dev libsasl2-dev
+
       - name: Cache Cargo
         uses: actions/cache@v4
         with:
