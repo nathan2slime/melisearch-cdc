@@ -1,0 +1,13 @@
+{
+  "name": "migrations",
+  "private": true,
+  "scripts": {
+    "build": "cargo build -p migration",
+    "check": "cargo check -p migration",
+    "format": "cargo fmt --package migration",
+    "format:check": "cargo fmt --package migration -- --check",
+    "lint": "cargo clippy -p migration --all-targets --all-features -- -D warnings",
+    "test": "cargo test -p migration",
+    "type-check": "cargo check -p migration"
+  }
+}

@@ -6,11 +6,13 @@
   "scripts": {
     "dev": "rsbuild dev",
     "build": "tsc && rsbuild build",
+    "check": "tsc --noEmit",
     "preview": "rsbuild preview",
-    "lint": "rslint src"
+    "lint": "rslint src",
+    "test": "tsc --noEmit",
+    "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@repo/ui": "workspace:*",
     "react": "19.2.8",
     "react-dom": "19.2.8"
   },

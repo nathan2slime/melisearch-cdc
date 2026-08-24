@@ -3,9 +3,21 @@
   "type": "module",
   "scripts": {
     "build": "turbo run build",
-    "dev": "turbo run dev",
+    "check": "turbo run check",
+    "dev": "dotenv -- turbo run dev",
+    "format": "prettier --write \"**/*.{ts,tsx,md}\" && cargo fmt --all",
+    "format:apps": "turbo run format",
+    "format:apps:check": "turbo run format:check",
+    "format:check": "prettier --check \"**/*.{ts,tsx,md}\" && cargo fmt --all -- --check",
     "lint": "turbo run lint",
-    "format": "prettier --write \"**/*.{ts,tsx,md}\""
+    "rust:build": "cargo build --workspace",
+    "rust:check": "cargo check --workspace",
+    "rust:fmt": "cargo fmt --all",
+    "rust:fmt:check": "cargo fmt --all -- --check",
+    "rust:lint": "cargo clippy --workspace --all-targets --all-features -- -D warnings",
+    "rust:test": "cargo test --workspace",
+    "test": "turbo run test",
+    "type-check": "turbo run type-check"
   },
   "devDependencies": {
     "@repo/rslint-config": "workspace:*",
@@ -15,5 +27,8 @@
     "turbo": "^2.10.11"
   },
   "packageManager": "pnpm@11.21.0",
-  "name": "with-rsbuild"
+  "name": "melisearch",
+  "dependencies": {
+    "dotenv-cli": "^11.0.0"
+  }
 }
