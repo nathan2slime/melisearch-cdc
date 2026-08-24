@@ -14,6 +14,7 @@ pub async fn run(config: Config) -> std::io::Result<()> {
         App::new()
             .app_data(db.clone())
             .configure(handlers::health::configure)
+            .configure(handlers::products::configure)
             .service(docs::swagger_ui())
     })
     .bind(bind_address)?

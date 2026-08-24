@@ -21,7 +21,18 @@ services:
     depends_on:
       postgres:
         condition: service_healthy
+  kafka:
+    image: apache/kafka:4.3.1
+    ports:
+      - "9092:9092"
 
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    ports:
+      - "8282:8080"
+    environment:
+      DYNAMIC_CONFIG_ENABLED: "true"
+  
   postgres:
     image: postgres:16-alpine
     environment:

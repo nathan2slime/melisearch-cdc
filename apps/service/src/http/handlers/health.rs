@@ -71,7 +71,7 @@ impl From<HealthReport> for HealthResponse {
 #[utoipa::path(
     get,
     path = "/health",
-    tag = "health",
+    tag = "Health",
     responses(
         (status = 200, description = "Service is healthy", body = HealthResponse),
         (status = 503, description = "Service dependency is unhealthy", body = HealthResponse)
