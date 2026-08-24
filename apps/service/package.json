@@ -1,0 +1,14 @@
+{
+  "name": "service",
+  "private": true,
+  "scripts": {
+    "build": "cargo build -p service",
+    "check": "cargo check -p service",
+    "dev": "cargo run -p service",
+    "format": "cargo fmt --package service",
+    "format:check": "cargo fmt --package service -- --check",
+    "lint": "cargo clippy -p service --all-targets --all-features -- -D warnings",
+    "test": "cargo test -p service",
+    "type-check": "cargo check -p service"
+  }
+}

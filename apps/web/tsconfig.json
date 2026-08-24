@@ -1,9 +1,19 @@
 {
   "extends": "@repo/typescript-config/rsbuild.json",
-  "include": ["src", "rsbuild.config.ts"],
+  "include": [
+    "src",
+    "rsbuild.config.ts"
+  ],
   "compilerOptions": {
     "jsx": "react-jsx",
     "strictNullChecks": true,
-    "types": ["@rsbuild/core/types"]
+    "paths": {
+      "~/*": [
+        "./src/*"
+      ]
+    },
+    "types": [
+      "@rsbuild/core/types"
+    ]
   }
 }

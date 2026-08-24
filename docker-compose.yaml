@@ -25,15 +25,15 @@ services:
   postgres:
     image: postgres:16-alpine
     environment:
-      POSTGRES_DB: stock_sync
-      POSTGRES_USER: stock_sync
-      POSTGRES_PASSWORD: stock_sync
+      POSTGRES_DB: melisearch
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: melisearch
     ports:
       - "5432:5432"
     volumes:
       - postgres-data:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U stock_sync -d stock_sync"]
+      test: ["CMD-SHELL", "pg_isready -U postgres -d melisearch"]
       interval: 10s
       timeout: 5s
       retries: 5

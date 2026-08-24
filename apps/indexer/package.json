@@ -1,0 +1,14 @@
+{
+  "name": "indexer",
+  "private": true,
+  "scripts": {
+    "build": "cargo build -p indexer",
+    "check": "cargo check -p indexer",
+    "dev": "cargo run -p indexer",
+    "format": "cargo fmt --package indexer",
+    "format:check": "cargo fmt --package indexer -- --check",
+    "lint": "cargo clippy -p indexer --all-targets --all-features -- -D warnings",
+    "test": "cargo test -p indexer",
+    "type-check": "cargo check -p indexer"
+  }
+}
