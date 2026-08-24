@@ -12,7 +12,7 @@ api.interceptors.response.use(
   (response) => response,
   (error) => {
     message.error(error.response?.data?.message ?? "Something went wrong.");
-    
+
     return Promise.reject(error);
   },
 );
