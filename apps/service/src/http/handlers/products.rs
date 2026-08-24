@@ -5,10 +5,14 @@ use utoipa::ToSchema;
 
 use crate::{
     application::products::{
-        self as product_use_cases, CreateProductInput, ProductError, UpdateProductInput,
+        self as product_use_cases, CreateProductInput, ProductError, SearchProductsInput,
+        SearchProductsOutput, UpdateProductInput,
     },
     domain::product::Product,
-    infra::database::products::SeaOrmProductRepository,
+    infra::{
+        database::products::SeaOrmProductRepository,
+        search::products::MeilisearchProductSearchIndex,
+    },
 };
 
 #[derive(Deserialize, ToSchema)]
@@ -39,6 +43,13 @@ pub struct UpdateProductRequest {
     stock: Option<i32>,
 }
 
+#[derive(Deserialize, ToSchema)]
+pub struct SearchProductsQuery {
+    q: Option<String>,
+    page: Option<u64>,
+    per_page: Option<u64>,
+}
+
 impl From<UpdateProductRequest> for UpdateProductInput {
     fn from(request: UpdateProductRequest) -> Self {
         Self {
@@ -57,6 +68,31 @@ pub struct ProductResponse {
     description: Option<String>,
     price_cents: i32,
     stock: i32,
+}
+
+#[derive(Serialize, ToSchema)]
+pub struct SearchProductsResponse {
+    items: Vec<ProductResponse>,
+    page: u64,
+    per_page: u64,
+    total_items: u64,
+    total_pages: u64,
+}
+
+impl From<SearchProductsOutput> for SearchProductsResponse {
+    fn from(output: SearchProductsOutput) -> Self {
+        Self {
+            items: output
+                .items
+                .into_iter()
+                .map(ProductResponse::from)
+                .collect(),
+            page: output.page,
+            per_page: output.per_page,
+            total_items: output.total_items,
+            total_pages: output.total_pages,
+        }
+    }
 }
 
 impl From<Product> for ProductResponse {
@@ -79,11 +115,15 @@ pub struct ProductErrorResponse {
 impl ResponseError for ProductError {
     fn status_code(&self) -> actix_web::http::StatusCode {
         match self {
-            Self::InvalidName | Self::InvalidPrice | Self::InvalidStock => {
-                actix_web::http::StatusCode::BAD_REQUEST
-            }
+            Self::InvalidName
+            | Self::InvalidPrice
+            | Self::InvalidStock
+            | Self::InvalidSearchPage
+            | Self::InvalidSearchPageSize => actix_web::http::StatusCode::BAD_REQUEST,
             Self::NotFound => actix_web::http::StatusCode::NOT_FOUND,
-            Self::Repository => actix_web::http::StatusCode::INTERNAL_SERVER_ERROR,
+            Self::Repository | Self::SearchIndex => {
+                actix_web::http::StatusCode::INTERNAL_SERVER_ERROR
+            }
         }
     }
 
@@ -121,23 +161,37 @@ pub async fn create_product(
     get,
     path = "/products",
     tag = "Products",
+    params(
+        ("q" = Option<String>, Query, description = "Optional product search text"),
+        ("page" = Option<u64>, Query, description = "Search result page, starting at 1"),
+        ("per_page" = Option<u64>, Query, description = "Products per page, from 1 to 100")
+    ),
     responses(
-        (status = 200, description = "Products listed", body = Vec<ProductResponse>),
-        (status = 500, description = "Product persistence failed", body = ProductErrorResponse)
+        (status = 200, description = "Products searched", body = SearchProductsResponse),
+        (status = 400, description = "Invalid search pagination", body = ProductErrorResponse),
+        (status = 500, description = "Product search or persistence failed", body = ProductErrorResponse)
     )
 )]
 #[get("/products")]
-pub async fn list_products(
+pub async fn search_products(
     db: web::Data<DatabaseConnection>,
+    search_index: web::Data<MeilisearchProductSearchIndex>,
+    query: web::Query<SearchProductsQuery>,
 ) -> Result<HttpResponse, ProductError> {
     let repository = product_repository(&db);
-    let products = product_use_cases::list_products(&repository).await?;
-    let products = products
-        .into_iter()
-        .map(ProductResponse::from)
-        .collect::<Vec<_>>();
+    let query = query.into_inner();
+    let products = product_use_cases::search_products(
+        &repository,
+        search_index.get_ref(),
+        SearchProductsInput {
+            query: query.q.unwrap_or_default(),
+            page: query.page,
+            per_page: query.per_page,
+        },
+    )
+    .await?;
 
-    Ok(HttpResponse::Ok().json(products))
+    Ok(HttpResponse::Ok().json(SearchProductsResponse::from(products)))
 }
 
 #[utoipa::path(
@@ -216,7 +270,7 @@ pub async fn delete_product(
 
 pub fn configure(cfg: &mut web::ServiceConfig) {
     cfg.service(create_product)
-        .service(list_products)
+        .service(search_products)
         .service(get_product)
         .service(update_product)
         .service(delete_product);
@@ -264,5 +318,15 @@ mod tests {
             request.description,
             Some(Some("Wireless accessory".to_owned()))
         );
+    }
+
+    #[test]
+    fn search_query_accepts_missing_search_text() {
+        let query =
+            serde_json::from_str::<SearchProductsQuery>(r#"{}"#).expect("query should deserialize");
+
+        assert_eq!(query.q, None);
+        assert_eq!(query.page, None);
+        assert_eq!(query.per_page, None);
     }
 }

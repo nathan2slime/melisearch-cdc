@@ -1,8 +1,7 @@
 import { createRoot } from "react-dom/client";
+import { App } from "~/app";
 
 import "~/style.css";
-
-const App = () => <main></main>;
 
 const root = document.getElementById("root");
 

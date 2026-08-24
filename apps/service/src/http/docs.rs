@@ -4,9 +4,9 @@ use utoipa_swagger_ui::SwaggerUi;
 use crate::http::handlers::{
     health::{__path_health, HealthIndicatorResponse, HealthResponse},
     products::{
-        __path_create_product, __path_delete_product, __path_get_product, __path_list_products,
+        __path_create_product, __path_delete_product, __path_get_product, __path_search_products,
         __path_update_product, CreateProductRequest, ProductErrorResponse, ProductResponse,
-        UpdateProductRequest,
+        SearchProductsQuery, SearchProductsResponse, UpdateProductRequest,
     },
 };
 
@@ -15,7 +15,7 @@ use crate::http::handlers::{
     paths(
         health,
         create_product,
-        list_products,
+        search_products,
         get_product,
         update_product,
         delete_product,
@@ -25,9 +25,12 @@ use crate::http::handlers::{
         HealthIndicatorResponse,
         CreateProductRequest,
         UpdateProductRequest,
+        SearchProductsQuery,
+        SearchProductsResponse,
         ProductResponse,
         ProductErrorResponse
     )),
+    servers((url = "/api")),
     tags(
         (name = "Health"),
         (name = "Products")
