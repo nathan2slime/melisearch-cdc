@@ -93,7 +93,7 @@ Important Docker Compose variables:
 ```txt
 SERVICE_DATABASE_URL=postgres://postgres:melisearch@postgres:5432/melisearch
 KAFKA_DOCKER_BOOTSTRAP_SERVERS=kafka:19092
-MEILISEARCH_DOCKER_URL=http://meilisearch:7700
+MEILISEARCH_URL=http://meilisearch:7700
 ```
 
 `.env` is intentionally ignored by Git.

@@ -18,7 +18,7 @@ services:
       - .env
     environment:
       DATABASE_URL: ${SERVICE_DATABASE_URL}
-      MEILISEARCH_URL: ${MEILISEARCH_DOCKER_URL}
+      MEILISEARCH_URL: ${MEILISEARCH_URL}
     ports:
       - "${SERVICE_PORT}:${PORT}"
     depends_on:
