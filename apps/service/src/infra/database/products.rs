@@ -69,12 +69,32 @@ impl ProductRepository for SeaOrmProductRepository {
             .await
             .map_err(to_repository_error)?
             .ok_or(ProductRepositoryError::NotFound)?;
+
+        if input.name.is_none()
+            && input.description.is_none()
+            && input.price_cents.is_none()
+            && input.stock.is_none()
+        {
+            return Ok(product.into());
+        }
+
         let mut product = product.into_active_model();
 
-        product.name = Set(input.name);
-        product.description = Set(input.description);
-        product.price_cents = Set(input.price_cents);
-        product.stock = Set(input.stock);
+        if let Some(name) = input.name {
+            product.name = Set(name);
+        }
+
+        if let Some(description) = input.description {
+            product.description = Set(description);
+        }
+
+        if let Some(price_cents) = input.price_cents {
+            product.price_cents = Set(price_cents);
+        }
+
+        if let Some(stock) = input.stock {
+            product.stock = Set(stock);
+        }
 
         let product = product
             .update(&self.db)

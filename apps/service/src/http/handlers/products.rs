@@ -32,10 +32,11 @@ impl From<CreateProductRequest> for CreateProductInput {
 
 #[derive(Deserialize, ToSchema)]
 pub struct UpdateProductRequest {
-    name: String,
-    description: Option<String>,
-    price_cents: i32,
-    stock: i32,
+    name: Option<String>,
+    #[serde(default, deserialize_with = "deserialize_optional_field")]
+    description: Option<Option<String>>,
+    price_cents: Option<i32>,
+    stock: Option<i32>,
 }
 
 impl From<UpdateProductRequest> for UpdateProductInput {
@@ -223,4 +224,45 @@ pub fn configure(cfg: &mut web::ServiceConfig) {
 
 fn product_repository(db: &web::Data<DatabaseConnection>) -> SeaOrmProductRepository {
     SeaOrmProductRepository::new(db.get_ref().clone())
+}
+
+fn deserialize_optional_field<'de, D, T>(deserializer: D) -> Result<Option<Option<T>>, D::Error>
+where
+    D: serde::Deserializer<'de>,
+    T: Deserialize<'de>,
+{
+    Option::<T>::deserialize(deserializer).map(Some)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn update_request_keeps_missing_description() {
+        let request = serde_json::from_str::<UpdateProductRequest>(r#"{"name":"Mouse"}"#)
+            .expect("request should deserialize");
+
+        assert_eq!(request.description, None);
+    }
+
+    #[test]
+    fn update_request_clears_null_description() {
+        let request = serde_json::from_str::<UpdateProductRequest>(r#"{"description":null}"#)
+            .expect("request should deserialize");
+
+        assert_eq!(request.description, Some(None));
+    }
+
+    #[test]
+    fn update_request_sets_description() {
+        let request =
+            serde_json::from_str::<UpdateProductRequest>(r#"{"description":"Wireless accessory"}"#)
+                .expect("request should deserialize");
+
+        assert_eq!(
+            request.description,
+            Some(Some("Wireless accessory".to_owned()))
+        );
+    }
 }
