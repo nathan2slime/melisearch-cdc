@@ -1,7 +1,9 @@
+use std::collections::HashMap;
+
 use async_trait::async_trait;
 use sea_orm::{
-    ActiveModelTrait, DatabaseConnection, DeriveEntityModel, DerivePrimaryKey, DeriveRelation,
-    EntityTrait, EnumIter, IntoActiveModel, PrimaryKeyTrait, QueryOrder, Set,
+    ActiveModelTrait, ColumnTrait, DatabaseConnection, DeriveEntityModel, DerivePrimaryKey,
+    DeriveRelation, EntityTrait, EnumIter, IntoActiveModel, PrimaryKeyTrait, QueryFilter, Set,
 };
 
 use crate::{
@@ -39,16 +41,6 @@ impl ProductRepository for SeaOrmProductRepository {
         Ok(product.into())
     }
 
-    async fn list(&self) -> Result<Vec<Product>, ProductRepositoryError> {
-        let products = Entity::find()
-            .order_by_asc(Column::Id)
-            .all(&self.db)
-            .await
-            .map_err(to_repository_error)?;
-
-        Ok(products.into_iter().map(Product::from).collect())
-    }
-
     async fn find(&self, id: i32) -> Result<Product, ProductRepositoryError> {
         let product = Entity::find_by_id(id)
             .one(&self.db)
@@ -57,6 +49,28 @@ impl ProductRepository for SeaOrmProductRepository {
             .ok_or(ProductRepositoryError::NotFound)?;
 
         Ok(product.into())
+    }
+
+    async fn find_many(&self, ids: &[i32]) -> Result<Vec<Product>, ProductRepositoryError> {
+        if ids.is_empty() {
+            return Ok(Vec::new());
+        }
+
+        let products = Entity::find()
+            .filter(Column::Id.is_in(ids.to_vec()))
+            .all(&self.db)
+            .await
+            .map_err(to_repository_error)?;
+
+        let mut products_by_id = products
+            .into_iter()
+            .map(|product| (product.id, Product::from(product)))
+            .collect::<HashMap<_, _>>();
+
+        Ok(ids
+            .iter()
+            .filter_map(|id| products_by_id.remove(id))
+            .collect())
     }
 
     async fn update(

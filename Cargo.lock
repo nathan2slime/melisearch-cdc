@@ -2749,6 +2749,7 @@ dependencies = [
  "actix-web",
  "async-trait",
  "dotenvy",
+ "reqwest",
  "sea-orm",
  "sea-orm-migration",
  "serde",

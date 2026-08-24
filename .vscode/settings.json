@@ -1,0 +1,11 @@
+{
+    "[typescript]": {
+        "js/ts.preferences.importModuleSpecifier": "non-relative"
+    },
+    "[javascript]": {
+        "js/ts.preferences.importModuleSpecifier": "non-relative"
+    },
+    "[typescriptreact]": {
+        "js/ts.preferences.importModuleSpecifier": "non-relative"
+    }
+}

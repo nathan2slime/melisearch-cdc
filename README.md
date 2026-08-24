@@ -173,7 +173,7 @@ cargo run -p service
 Default local base URL:
 
 ```txt
-http://localhost:5400
+http://localhost:5400/api
 ```
 
 OpenAPI and Swagger UI:
@@ -186,13 +186,36 @@ http://localhost:5400/api-docs/openapi.json
 ## API Endpoints
 
 ```txt
-GET    /health
-POST   /products
-GET    /products
-GET    /products/{id}
-PUT    /products/{id}
-DELETE /products/{id}
+GET    /api/health
+POST   /api/products
+GET    /api/products?page=1&per_page=20
+GET    /api/products?q=keyboard&page=1&per_page=20
+GET    /api/products/{id}
+PUT    /api/products/{id}
+DELETE /api/products/{id}
 ```
+
+Search responses are paginated:
+
+```json
+{
+  "items": [
+    {
+      "id": 1,
+      "name": "Keyboard",
+      "description": "Mechanical",
+      "price_cents": 12999,
+      "stock": 7
+    }
+  ],
+  "page": 1,
+  "per_page": 20,
+  "total_items": 1,
+  "total_pages": 1
+}
+```
+
+`total_items` is the total number of documents in the Meilisearch `products` index, ignoring the search query.
 
 Create product payload:
 
