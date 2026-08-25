@@ -27,7 +27,7 @@
     "turbo": "^2.10.11"
   },
   "packageManager": "pnpm@11.21.0",
-  "name": "melisearch",
+  "name": "meilisearch",
   "dependencies": {
     "dotenv-cli": "^11.0.0"
   }

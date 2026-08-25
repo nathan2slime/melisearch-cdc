@@ -1,3 +1,4 @@
+use actix_cors::Cors;
 use actix_web::{App, HttpServer, web};
 
 use crate::{
@@ -17,6 +18,7 @@ pub async fn run(config: Config) -> std::io::Result<()> {
 
     HttpServer::new(move || {
         App::new()
+            .wrap(Cors::permissive())
             .app_data(db.clone())
             .app_data(product_search_index.clone())
             .service(

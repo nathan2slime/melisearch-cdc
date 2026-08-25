@@ -6,6 +6,7 @@ dist
 dist-ssr
 *.local
 .env
+.env.production
 .cache
 server/dist
 public/dist
