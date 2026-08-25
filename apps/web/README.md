@@ -33,7 +33,7 @@ pnpm --filter web lint
 
 ## Docker
 
-The Docker image builds the static app with `REACT_APP_PUBLIC_API_URL` from `.env.production`, defaulting to `/api`. The nginx runtime proxies API traffic to `SERVICE_UPSTREAM`, which defaults to `http://service:5400`.
+The Docker image builds the static app with `REACT_APP_PUBLIC_API_URL` from `.env.production`, which should be created from the `Docker Compose` block in the root `.env.example`. It defaults to `/api`. The nginx runtime proxies API traffic to `SERVICE_UPSTREAM`, which defaults to `http://service:5400`.
 
 ## Verification
 
