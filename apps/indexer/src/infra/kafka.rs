@@ -1,11 +1,16 @@
+use std::{collections::HashMap, time::Duration};
+
 use rdkafka::{
     ClientConfig, Message, Offset, TopicPartitionList,
     consumer::{CommitMode, Consumer, StreamConsumer},
 };
 use serde::Deserialize;
+use tokio::time::timeout;
 
 use crate::{
-    application::products::{ProductEventDelivery, ProductEventSource, ProductEventSourceError},
+    application::products::{
+        ProductEventBatchDelivery, ProductEventSource, ProductEventSourceError,
+    },
     domain::product::{ProductDocument, ProductEvent},
 };
 
@@ -36,26 +41,39 @@ impl KafkaProductEventSource {
 impl ProductEventSource for KafkaProductEventSource {
     type Ack = KafkaProductEventAck;
 
-    async fn next_event(&self) -> Result<ProductEventDelivery<Self::Ack>, ProductEventSourceError> {
-        let message = self.consumer.recv().await.map_err(to_source_error)?;
-        let ack = KafkaProductEventAck {
-            topic: message.topic().to_owned(),
-            partition: message.partition(),
-            offset: message.offset(),
-        };
-        let event = match message.payload() {
-            Some(payload) => parse_product_event(payload)?,
-            None => ProductEvent::Ignore,
-        };
+    async fn next_batch(
+        &self,
+        max_size: usize,
+        max_wait: Duration,
+    ) -> Result<ProductEventBatchDelivery<Self::Ack>, ProductEventSourceError> {
+        let max_size = max_size.max(1);
+        let mut events = Vec::with_capacity(max_size);
+        let mut ack = KafkaProductEventAck::default();
 
-        Ok(ProductEventDelivery::new(event, ack))
+        let message = self.consumer.recv().await.map_err(to_source_error)?;
+        collect_message(&mut events, &mut ack, &message)?;
+
+        while events.len() < max_size {
+            let message = match timeout(max_wait, self.consumer.recv()).await {
+                Ok(Ok(message)) => message,
+                Ok(Err(error)) => return Err(to_source_error(error)),
+                Err(_) => break,
+            };
+
+            collect_message(&mut events, &mut ack, &message)?;
+        }
+
+        Ok(ProductEventBatchDelivery::new(events, ack))
     }
 
-    async fn commit(&self, ack: Self::Ack) -> Result<(), ProductEventSourceError> {
+    async fn commit(&self, ack: &Self::Ack) -> Result<(), ProductEventSourceError> {
         let mut offsets = TopicPartitionList::new();
-        offsets
-            .add_partition_offset(&ack.topic, ack.partition, Offset::Offset(ack.offset + 1))
-            .map_err(to_source_error)?;
+
+        for ((topic, partition), offset) in &ack.offsets {
+            offsets
+                .add_partition_offset(topic, *partition, Offset::Offset(*offset + 1))
+                .map_err(to_source_error)?;
+        }
 
         self.consumer
             .commit(&offsets, CommitMode::Async)
@@ -63,10 +81,34 @@ impl ProductEventSource for KafkaProductEventSource {
     }
 }
 
+#[derive(Default)]
 pub struct KafkaProductEventAck {
-    topic: String,
-    partition: i32,
-    offset: i64,
+    offsets: HashMap<(String, i32), i64>,
+}
+
+impl KafkaProductEventAck {
+    fn record_message(&mut self, message: &impl Message) {
+        self.offsets
+            .entry((message.topic().to_owned(), message.partition()))
+            .and_modify(|offset| *offset = (*offset).max(message.offset()))
+            .or_insert(message.offset());
+    }
+}
+
+fn collect_message(
+    events: &mut Vec<ProductEvent>,
+    ack: &mut KafkaProductEventAck,
+    message: &impl Message,
+) -> Result<(), ProductEventSourceError> {
+    ack.record_message(message);
+
+    let event = match message.payload() {
+        Some(payload) => parse_product_event(payload)?,
+        None => ProductEvent::Ignore,
+    };
+    events.push(event);
+
+    Ok(())
 }
 
 fn to_source_error(error: rdkafka::error::KafkaError) -> ProductEventSourceError {

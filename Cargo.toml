@@ -2,6 +2,7 @@
 members = [
     "apps/migrations",
     "apps/indexer",
-    "apps/service"
+    "apps/service",
+    "apps/seed"
 ]
 resolver = "2"

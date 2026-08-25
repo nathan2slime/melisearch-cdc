@@ -4,6 +4,7 @@ version = "0.1.0"
 edition = "2024"
 
 [dependencies]
+actix-cors = "0.7"
 actix-web = "4"
 async-trait = "0.1"
 dotenvy = "0.15.7"

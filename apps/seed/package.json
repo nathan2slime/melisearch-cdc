@@ -1,0 +1,14 @@
+{
+  "name": "seed",
+  "private": true,
+  "scripts": {
+    "build": "cargo build -p seed",
+    "check": "cargo check -p seed",
+    "dev": "cargo run -p seed",
+    "format": "cargo fmt --package seed",
+    "format:check": "cargo fmt --package seed -- --check",
+    "lint": "cargo clippy -p seed --all-targets --all-features -- -D warnings",
+    "test": "cargo test -p seed",
+    "type-check": "cargo check -p seed"
+  }
+}

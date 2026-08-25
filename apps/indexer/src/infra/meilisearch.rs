@@ -56,13 +56,21 @@ impl ProductIndex for MeilisearchProductIndex {
         Err(meilisearch_response_error(status, body))
     }
 
-    async fn upsert_product(&self, product: &ProductDocument) -> Result<(), ProductIndexError> {
+    async fn upsert_products(&self, products: &[ProductDocument]) -> Result<(), ProductIndexError> {
+        if products.is_empty() {
+            return Ok(());
+        }
+
+        let products = products
+            .iter()
+            .map(ProductDocumentRequest::from)
+            .collect::<Vec<_>>();
         let response = self
             .authorize(self.client.post(format!(
                 "{}/indexes/{}/documents",
                 self.url, self.products_index
             )))
-            .json(&[ProductDocumentRequest::from(product)])
+            .json(&products)
             .send()
             .await
             .map_err(to_index_error)?;
@@ -70,12 +78,17 @@ impl ProductIndex for MeilisearchProductIndex {
         accept_meilisearch_response(response).await
     }
 
-    async fn delete_product(&self, id: i32) -> Result<(), ProductIndexError> {
+    async fn delete_products(&self, ids: &[i32]) -> Result<(), ProductIndexError> {
+        if ids.is_empty() {
+            return Ok(());
+        }
+
         let response = self
-            .authorize(self.client.delete(format!(
-                "{}/indexes/{}/documents/{}",
-                self.url, self.products_index, id
+            .authorize(self.client.post(format!(
+                "{}/indexes/{}/documents/delete-batch",
+                self.url, self.products_index
             )))
+            .json(ids)
             .send()
             .await
             .map_err(to_index_error)?;

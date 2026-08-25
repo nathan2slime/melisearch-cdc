@@ -1,0 +1,10 @@
+[package]
+name = "seed"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+dotenvy = "0.15.7"
+fake = { git = "https://github.com/cksac/fake-rs.git", features = ["derive"] }
+sea-orm = { version = "1.1.14", features = ["macros", "runtime-tokio-rustls", "sqlx-postgres"] }
+tokio = { version = "1", features = ["macros", "rt-multi-thread"] }
