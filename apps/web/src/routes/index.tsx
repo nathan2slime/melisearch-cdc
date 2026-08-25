@@ -15,21 +15,22 @@ const MAX_SEARCH_TOTAL_HITS = 1_000;
 const maxSearchPage = (perPage: number) =>
   Math.max(DEFAULT_PAGE, Math.ceil(MAX_SEARCH_TOTAL_HITS / perPage));
 
-const productsSearchSchema = z.object({
-  q: z
-    .string()
-    .trim()
-    .transform((value) => value || undefined)
-    .optional()
-    .catch(undefined),
-  page: z.coerce.number().int().min(1).catch(DEFAULT_PAGE),
-  per_page: z.coerce
-    .number()
-    .int()
-    .min(1)
-    .max(MAX_PER_PAGE)
-    .catch(DEFAULT_PER_PAGE),
-})
+const productsSearchSchema = z
+  .object({
+    q: z
+      .string()
+      .trim()
+      .transform((value) => value || undefined)
+      .optional()
+      .catch(undefined),
+    page: z.coerce.number().int().min(1).catch(DEFAULT_PAGE),
+    per_page: z.coerce
+      .number()
+      .int()
+      .min(1)
+      .max(MAX_PER_PAGE)
+      .catch(DEFAULT_PER_PAGE),
+  })
   .transform((search) => ({
     ...search,
     page: Math.min(search.page, maxSearchPage(search.per_page)),

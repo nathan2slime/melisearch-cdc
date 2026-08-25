@@ -16,8 +16,6 @@ export const FeedProducts = ({ data }: Props) => {
       />
     </div>
   ) : (
-    data.map((product) => (
-      <CardProduct data={product} key={product.id} />
-    ))
+    data.map((product) => <CardProduct data={product} key={product.id} />)
   );
 };
