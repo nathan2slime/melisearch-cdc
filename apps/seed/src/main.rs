@@ -13,10 +13,14 @@ const BATCH_SIZE: usize = 1_000;
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let _ = dotenvy::dotenv();
+    init_logging();
+
     let database_url = std::env::var("DATABASE_URL")?;
     let db = Database::connect(database_url).await?;
 
     let mut inserted = 0;
+
+    log::info!("seeding {PRODUCT_COUNT} products in batches of {BATCH_SIZE}");
 
     for batch_start in (0..PRODUCT_COUNT).step_by(BATCH_SIZE) {
         let batch_size = (PRODUCT_COUNT - batch_start).min(BATCH_SIZE);
@@ -24,11 +28,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
         Entity::insert_many(products).exec(&db).await?;
         inserted += batch_size;
+
+        log::info!("seeded {inserted}/{PRODUCT_COUNT} products");
     }
 
-    println!("Seeded {inserted} products");
+    log::info!("seed completed with {inserted} products");
 
     Ok(())
+}
+
+fn init_logging() {
+    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
 }
 
 fn fake_product() -> ActiveModel {

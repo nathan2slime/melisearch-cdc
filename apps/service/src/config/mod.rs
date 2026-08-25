@@ -38,7 +38,6 @@ impl Config {
     }
 
     pub fn bind_address(&self) -> String {
-        println!("Binding to {}:{}", self.host, self.port);
         format!("{}:{}", self.host, self.port)
     }
 }

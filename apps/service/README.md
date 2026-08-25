@@ -42,6 +42,7 @@ use_cases.rs  Product use cases
 | `MEILISEARCH_URL`            | `http://localhost:7700`                                    | Meilisearch base URL         |
 | `MEILISEARCH_API_KEY`        | `342143821043`                                             | Optional Meilisearch API key |
 | `MEILISEARCH_PRODUCTS_INDEX` | `products`                                                 | Product index name           |
+| `RUST_LOG`                   | `info`                                                     | Log filter                   |
 
 For Docker Compose, create `.env.production` from the `Docker Compose` block in the root `.env.example`. It uses the same variable names with Docker-network hostnames, like `DATABASE_URL=postgres://postgres:melisearch@postgres:5432/melisearch` and `MEILISEARCH_URL=http://meilisearch:7700`.
 

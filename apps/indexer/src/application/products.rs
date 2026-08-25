@@ -172,7 +172,7 @@ where
         match operation().await {
             Ok(value) => return value,
             Err(error) => {
-                eprintln!(
+                log::warn!(
                     "indexer failed to {description} on attempt {attempt}: {error}; retrying in {} ms",
                     retry_delay.as_millis()
                 );

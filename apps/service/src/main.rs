@@ -8,5 +8,12 @@ use config::Config;
 
 #[actix_web::main]
 async fn main() -> std::io::Result<()> {
-    http::server::run(Config::from_env()).await
+    let config = Config::from_env();
+    init_logging();
+
+    http::server::run(config).await
+}
+
+fn init_logging() {
+    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
 }

@@ -1,5 +1,5 @@
 use actix_cors::Cors;
-use actix_web::{App, HttpServer, web};
+use actix_web::{App, HttpServer, middleware::Logger, web};
 
 use crate::{
     config::Config,
@@ -16,8 +16,11 @@ pub async fn run(config: Config) -> std::io::Result<()> {
     ));
     let bind_address = config.bind_address();
 
+    log::info!("service binding to {bind_address}");
+
     HttpServer::new(move || {
         App::new()
+            .wrap(Logger::default())
             .wrap(Cors::permissive())
             .app_data(db.clone())
             .app_data(product_search_index.clone())
