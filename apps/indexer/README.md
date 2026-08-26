@@ -31,6 +31,7 @@ Rust worker that consumes Debezium product events from Kafka and updates the Mei
 | `MEILISEARCH_URL`                  | `http://localhost:7700`      | Meilisearch base URL                      |
 | `MEILISEARCH_API_KEY`              | `342143821043`               | Optional Meilisearch API key              |
 | `MEILISEARCH_PRODUCTS_INDEX`       | `products`                   | Product index name                        |
+| `RUST_LOG`                         | `info`                       | Log filter                                |
 
 For Docker Compose, create `.env.production` from the `Docker Compose` block in the root `.env.example`. It uses the same variable names with Docker-network values, like `KAFKA_BOOTSTRAP_SERVERS=kafka:19092` and `MEILISEARCH_URL=http://meilisearch:7700`.
 

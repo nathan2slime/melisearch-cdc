@@ -32,33 +32,6 @@ flowchart LR
     Indexer -->|Upsert / Delete| Meili
 ```
 
-### Data flow
-
-```text
-Write path
-
-Client
-  -> API
-  -> PostgreSQL
-  -> Debezium
-  -> Kafka
-  -> Indexer
-  -> Meilisearch
-
-
-Search path
-
-Client
-  -> API
-  -> Meilisearch
-  -> ranked product IDs
-  -> PostgreSQL
-  -> hydrated products
-  -> Client
-```
-
-This architecture keeps **PostgreSQL as the source of truth** while using Meilisearch exclusively as a search index.
-
 ## Tech Stack
 
 | Technology     | Purpose                                          |
@@ -138,6 +111,8 @@ cp .env.example .env
 Create `.env.production` using the **Docker Compose** configuration from `.env.example`.
 
 Docker containers use Docker network hostnames instead of `localhost`.
+
+Rust application logs use `RUST_LOG`, which defaults to `info` in `.env.example`.
 
 For example:
 
@@ -362,6 +337,8 @@ View logs:
 ```sh
 docker compose --env-file .env.production logs -f
 ```
+
+Increase Rust app log verbosity by setting `RUST_LOG`, for example `RUST_LOG=debug`.
 
 View indexer logs:
 

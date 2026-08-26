@@ -14,6 +14,8 @@ const INDEXER_RETRY_DELAY: Duration = Duration::from_secs(1);
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let config = Config::from_env();
+    init_logging();
+
     let product_index = MeilisearchProductIndex::new(
         config.meilisearch_url.clone(),
         config.meilisearch_api_key.clone(),
@@ -29,7 +31,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     })
     .await;
 
-    println!(
+    log::info!(
         "indexer consuming Kafka topic '{}' from '{}' in batches of up to {} messages",
         config.kafka_products_topic,
         config.kafka_bootstrap_servers,
@@ -46,4 +48,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     .await?;
 
     Ok(())
+}
+
+fn init_logging() {
+    env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("info")).init();
 }
