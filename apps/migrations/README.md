@@ -26,7 +26,7 @@ cargo run -p migration -- status
 
 The Docker image runs `migrations up` by default:
 
-Create `.env.production` from the `Docker Compose` block in the root `.env.example` before running this command.
+Copy the root `.env.example` to `.env.production` before running this command.
 
 ```sh
 docker compose --env-file .env.production up migrations

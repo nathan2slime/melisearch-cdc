@@ -13,7 +13,7 @@ The seed program creates `40,000` products in batches of `1,000`. It requires th
 | `DATABASE_URL` | `postgres://postgres:melisearch@localhost:5432/melisearch` | Postgres connection |
 | `RUST_LOG`     | `info`                                                     | Log filter          |
 
-For Docker Compose, create `.env.production` from the `Docker Compose` block in the root `.env.example`. It uses the same variable name with the Docker-network hostname: `DATABASE_URL=postgres://postgres:melisearch@postgres:5432/melisearch`.
+For Docker Compose, copy the root `.env.example` to `.env.production`. The template uses the Docker-network hostname: `DATABASE_URL=postgres://postgres:melisearch@postgres:5432/melisearch`.
 
 ## Commands
 

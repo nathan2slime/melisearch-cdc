@@ -21,9 +21,6 @@ RUN apt-get update \
 
 WORKDIR /app
 
-ENV HOST=0.0.0.0
-ENV PORT=5400
-
 COPY --from=builder /app/target/release/service /usr/local/bin/service
 
 EXPOSE 5400

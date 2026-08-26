@@ -97,32 +97,35 @@ pnpm install
 
 ### 2. Configure the environment
 
-The repository contains two environment configurations:
+The repository ships a single template, `.env.example`, with every application and Docker Compose variable.
 
-* `.env` — local application development
-* `.env.production` — Docker Compose
+Dockerfiles do not bake application environment defaults into the images. Compose reads values from `.env.production`, which should be created from `.env.example`.
 
-Copy the corresponding sections from `.env.example`.
+```sh
+cp .env.example .env.production
+```
+
+Docker containers use Docker network hostnames instead of `localhost`, so `.env.example` is ready for Docker Compose by default.
+
+For host-based local development, create `.env` from the same template and replace the Docker hostnames with local ones:
 
 ```sh
 cp .env.example .env
 ```
 
-Create `.env.production` using the **Docker Compose** configuration from `.env.example`.
-
-Docker containers use Docker network hostnames instead of `localhost`.
+```env
+DATABASE_URL=postgres://postgres:melisearch@localhost:5432/melisearch
+KAFKA_BOOTSTRAP_SERVERS=localhost:9092
+MEILISEARCH_URL=http://localhost:7700
+```
 
 Rust application logs use `RUST_LOG`, which defaults to `info` in `.env.example`.
 
-For example:
-
-```env
-DATABASE_URL=postgres://postgres:melisearch@postgres:5432/melisearch
-```
-
-The Compose environment also exposes configurable ports such as:
+The Compose environment exposes configurable values such as:
 
 ```text
+REACT_APP_PUBLIC_API_URL
+SERVICE_UPSTREAM
 WEB_PORT
 SERVICE_PORT
 POSTGRES_PORT
@@ -139,6 +142,8 @@ docker compose --env-file .env.production up --build
 ```
 
 Docker Compose starts the infrastructure and application containers.
+
+Always pass `--env-file .env.production` so Compose interpolation and container environments use the same values.
 
 The `migrations` service runs as a required one-shot container after PostgreSQL becomes healthy.
 
@@ -259,10 +264,10 @@ This keeps the write path decoupled from the search infrastructure.
 
 Meilisearch is responsible for:
 
-* full-text search
-* relevance ranking
-* filtering
-* returning ordered product IDs
+- full-text search
+- relevance ranking
+- filtering
+- returning ordered product IDs
 
 PostgreSQL remains responsible for the canonical product data.
 
@@ -362,16 +367,16 @@ curl http://localhost:8083/connectors/postgres-products/status
 
 This repository is primarily a study and reference project for experimenting with:
 
-* Change Data Capture
-* PostgreSQL logical replication
-* event-driven architectures
-* Kafka consumers
-* eventual consistency
-* search indexing
-* Rust backend development
-* React applications
-* Docker-based local environments
-* synchronization between transactional databases and search engines
+- Change Data Capture
+- PostgreSQL logical replication
+- event-driven architectures
+- Kafka consumers
+- eventual consistency
+- search indexing
+- Rust backend development
+- React applications
+- Docker-based local environments
+- synchronization between transactional databases and search engines
 
 The main architectural principle is simple:
 

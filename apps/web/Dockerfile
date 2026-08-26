@@ -2,9 +2,6 @@
 
 FROM node:24-bookworm-slim AS builder
 
-ENV PNPM_HOME=/pnpm
-ENV PATH="$PNPM_HOME:$PATH"
-
 RUN corepack enable
 
 WORKDIR /app
@@ -23,14 +20,11 @@ RUN pnpm install --frozen-lockfile
 COPY apps/web apps/web
 COPY packages packages
 
-ARG REACT_APP_PUBLIC_API_URL=/api
-ENV REACT_APP_PUBLIC_API_URL=$REACT_APP_PUBLIC_API_URL
+ARG REACT_APP_PUBLIC_API_URL
 
 RUN pnpm --filter web build
 
 FROM nginx:1.29-alpine AS runtime
-
-ENV SERVICE_UPSTREAM=http://service:5400
 
 COPY apps/web/nginx.conf /etc/nginx/templates/default.conf.template
 COPY --from=builder /app/apps/web/dist /usr/share/nginx/html

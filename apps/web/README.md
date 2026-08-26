@@ -13,10 +13,11 @@ React frontend built with Rsbuild. It talks to the API through `/api` by default
 
 ## Environment
 
-| Variable                   | Default | Purpose                               |
-| -------------------------- | ------- | ------------------------------------- |
-| `REACT_APP_PUBLIC_API_URL` | `/api`  | Browser-visible API base URL          |
-| `PORT`                     | `5400`  | Used by the dev proxy target fallback |
+| Variable                   | Default / Example     | Purpose                               |
+| -------------------------- | --------------------- | ------------------------------------- |
+| `REACT_APP_PUBLIC_API_URL` | `/api`                | Browser-visible API base URL          |
+| `SERVICE_UPSTREAM`         | `http://service:5400` | Nginx API proxy target in Docker      |
+| `PORT`                     | `5400`                | Used by the dev proxy target fallback |
 
 `rsbuild.config.ts` loads environment variables from the repository root and proxies `/api` to `http://localhost:${PORT}` during development.
 
@@ -33,7 +34,7 @@ pnpm --filter web lint
 
 ## Docker
 
-The Docker image builds the static app with `REACT_APP_PUBLIC_API_URL` from `.env.production`, which should be created from the `Docker Compose` block in the root `.env.example`. It defaults to `/api`. The nginx runtime proxies API traffic to `SERVICE_UPSTREAM`, which defaults to `http://service:5400`.
+The Dockerfile does not define application environment defaults. Docker Compose passes `REACT_APP_PUBLIC_API_URL` as a build argument from `.env.production`, and the nginx runtime reads `SERVICE_UPSTREAM` from the same file.
 
 ## Verification
 
