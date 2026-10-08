@@ -2,17 +2,15 @@
   "name": "melisearch-postgres",
   "config": {
     "connector.class": "io.debezium.connector.postgresql.PostgresConnector",
-
     "database.hostname": "postgres",
     "database.port": "5432",
     "database.user": "postgres",
     "database.password": "melisearch",
     "database.dbname": "melisearch",
-
     "topic.prefix": "melisearch",
-
     "plugin.name": "pgoutput",
-
-    "table.include.list": "public.products"
+    "table.include.list": "public.products",
+    "topic.creation.default.partitions": "4",
+    "topic.creation.default.replication.factor": "1"
   }
 }
